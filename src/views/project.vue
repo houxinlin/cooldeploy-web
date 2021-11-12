@@ -3,19 +3,28 @@
 
     <el-button type="primary" @click="dialogFormVisible = true">增加</el-button>
     <el-table :data="projects" style="width: 100%">
-      <el-table-column label="当前commit ID" width="180">
+      <el-table-column prop="firstCommitId" label="当前commit ID" width="180">
 
       </el-table-column>
       <el-table-column prop="projectName" label="项目名称" width="180">
       </el-table-column>
       <el-table-column prop="buildTool" label="项目构建工具" width="180">
       </el-table-column>
-      <el-table-column label="执行脚本" width="180">
+      <el-table-column prop="shell" label="执行脚本" width="180">
+        <template #default="scope">
+
+          <el-button size="mini" type="info" @click="showProjectShell( scope.row)">查看</el-button>
+
+        </template>
       </el-table-column>
       <el-table-column label="操作">
         <template #default="scope">
           <el-button size="mini" @click="handlerConfig(scope.$index, scope.row)">配置</el-button>
-          <el-button size="mini" type="danger" @click="handleDelete(scope.$index, scope.row)">操作</el-button>
+          <el-popconfirm confirm-button-text="执行shell" cancel-button-text="构建" :icon="InfoFilled" icon-color="red" title="你想要执行什么操作？" @confirm="taskExecShellEvent(scope.row)" @cancel="taskBuildEvent(scope.row)">
+            <template #reference>
+              <el-button type="danger" size="mini">操作</el-button>
+            </template>
+          </el-popconfirm>
           <el-button size="mini" type="success" v-if="scope.row.buildTool=='GRADLE'" @click="exectureTask(scope.$index, scope.row)">执行task</el-button>
 
         </template>
@@ -84,6 +93,18 @@
       </el-scrollbar>
 
     </el-drawer>
+
+    <el-dialog v-model="shellDialogVisible" title="shell" width="30%" center>
+      <pre style="white-space: pre-line;">
+        {{projectShell}}
+      </pre>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="shellDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="shellDialogVisible = false">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -92,10 +113,12 @@ import { ElLoading } from "element-plus";
 import { ElNotification } from "element-plus";
 import { defineComponent, toRefs, reactive } from "vue";
 import {
+  buildProjectApi,
   listProjectApi,
   listTasksApi,
   saveConfigApi,
   gradleTaskApi,
+  shellProjectApi,
 } from "../apis/project";
 import {
   Search,
@@ -120,6 +143,8 @@ export default {
       dialogFormVisible: false,
       commands: [],
       projects: [],
+      shellDialogVisible: false,
+      projectShell: "",
       shellTxt: "#!/bin/sh\n",
       selectProjectIndex: -1,
       commandAuto: [],
@@ -148,6 +173,7 @@ export default {
         if (res.data.code == 0) {
           state.dialogConfigVisible = false;
         }
+        listProject();
         ElNotification({
           title: "提示",
           duration: 3000,
@@ -159,6 +185,8 @@ export default {
     const handlerConfig = (i, item) => {
       state.selectProjectIndex = i;
       state.dialogConfigVisible = !state.dialogConfigVisible;
+      state.shellTxt = item.shell;
+      state.commands = item.buildCommands;
       listTasksApi({ name: item.projectName }).then((res) => {
         state.commandAuto = res.data.data;
       });
@@ -186,19 +214,55 @@ export default {
         state.selectProjectIndex = i;
         state.commandAuto = res.data.data;
         state.dialogTaskVisible = !state.dialogTaskVisible;
-        state.loading.close()
+        state.loading.close();
       });
     };
+
     const execProjectTask = (i) => {
       gradleTaskApi({
         projectName: state.projects[state.selectProjectIndex].projectName,
         taskName: i,
-      }).then((res) => {});
+      }).then((res) => {
+        ElNotification({
+          title: "调用成功",
+          message: "请打开左边输出窗口查看日志",
+          position: "bottom-right",
+          duration: 1500,
+        });
+      });
+    };
+
+    const taskBuildEvent = (i) => {
+      buildProjectApi({ projectName: i.projectName }).then((res) => {
+        ElNotification({
+          title: "调用成功",
+          message: "请打开左边输出窗口查看日志",
+          position: "bottom-right",
+          duration: 1500,
+        });
+      });
+    };
+    const taskExecShellEvent = (i) => {
+      shellProjectApi({ projectName: i.projectName }).then((res) => {
+        ElNotification({
+          title: "调用成功",
+          message: "请打开左边输出窗口查看日志",
+          position: "bottom-right",
+          duration: 1500,
+        });
+      });
+    };
+    const showProjectShell = (i) => {
+      state.projectShell = i.shell;
+      state.shellDialogVisible = !state.shellDialogVisible;
     };
     return {
       ...toRefs(state),
       handlerConfig,
+      taskBuildEvent,
+      taskExecShellEvent,
       execProjectTask,
+      showProjectShell,
       exectureTask,
       listProject,
       autocompleteFocus,

@@ -28,3 +28,19 @@ export function saveConfigApi(data){
     data
   })
 }
+
+export function buildProjectApi(params){
+  return axios({
+    url: '/api/project/execProjectCommand',
+    method: 'get',
+    params
+  })
+}
+
+export function shellProjectApi(params){
+  return axios({
+    url: '/api/project/execProjectShell',
+    method: 'get',
+    params
+  })
+}
