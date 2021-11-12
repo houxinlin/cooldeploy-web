@@ -22,8 +22,8 @@
       <path d="M263.10883555 897.96941748c0 45.9613677 60.71424948 72.06411378 94.18372742 38.58492682l385.83470458-385.82985008c22.1305363-22.12932267 22.1305363-55.03931733 0-77.16985363L357.29256297 87.73449955c-34.32751408-34.33722311-94.18372741-5.67007763-94.18372742 39.15411912v771.08079881z m0 0" p-id="2435" fill="#1296db"></path>
     </svg>
   </div>
-  <el-drawer custom-class="drawer" v-model="drawer" title="I am the title" :with-header="false" direction="ltr" size="30%">
-    <el-scrollbar>
+  <el-drawer custom-class="drawer" v-model="drawer" title="I am the title" :with-header="false" direction="btt" size="50%">
+    <el-scrollbar ref="scrollbar">
       <div style="white-space: pre-line;">
         {{messageLine}}
       </div>
@@ -37,15 +37,19 @@ import { defineComponent, onMounted, ref } from "vue";
 import { ElNotification } from "element-plus";
 export default {
   setup(props, context) {
+    const scrollbar = ref(null);
+    onMounted(() => {});
     return {
       props,
-      drawer: ref(false),
+      scrollbar,
+      drawer: ref(true),
       messageLine: ref(""),
       timetCount: 10,
     };
   },
 
   mounted() {
+    this.drawer = false;
     setInterval(() => {
       this.timetCount++;
     }, 1000);
@@ -58,15 +62,11 @@ export default {
       this.socket.onerror = this.error;
       this.socket.onmessage = this.getMessage;
     },
-    open: function () {
-      console.log("socket连接成功");
-    },
-    error: function () {
-      console.log("连接错误");
-    },
+    open: function () {},
+    error: function () {},
     getMessage: function (msg) {
+      this.scrollbar.setScrollTop(100000);
       if (this.timetCount >= 10) {
-        this.timetCount = 0;
         ElNotification({
           title: "有新的消息",
           message: "受到新消息推送",
@@ -74,6 +74,7 @@ export default {
           duration: 1500,
         });
       }
+      this.timetCount = 0;
       document.querySelector(".el-scrollbar__view").scrollTop = 100000;
       this.messageLine = this.messageLine + msg.data;
     },
@@ -92,6 +93,7 @@ export default {
   background: #444242d1 !important;
   color: #ffffff;
   line-height: 20px;
+  font-size: 10px;
 }
 
 .el-header {

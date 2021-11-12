@@ -12,9 +12,7 @@
       </el-table-column>
       <el-table-column prop="shell" label="执行脚本" width="180">
         <template #default="scope">
-
           <el-button size="mini" type="info" @click="showProjectShell( scope.row)">查看</el-button>
-
         </template>
       </el-table-column>
       <el-table-column label="操作">
@@ -25,6 +23,8 @@
               <el-button type="danger" size="mini">操作</el-button>
             </template>
           </el-popconfirm>
+          <el-button size="mini" type="primary" @click="buildAndDeploy(scope.$index, scope.row)">构建&Shell</el-button>
+
           <el-button size="mini" type="success" v-if="scope.row.buildTool=='GRADLE'" @click="exectureTask(scope.$index, scope.row)">执行task</el-button>
 
         </template>
@@ -111,7 +111,7 @@
 <script>
 import { ElLoading } from "element-plus";
 import { ElNotification } from "element-plus";
-import { defineComponent, toRefs, reactive } from "vue";
+import { toRefs, reactive } from "vue";
 import {
   buildProjectApi,
   listProjectApi,
@@ -119,15 +119,9 @@ import {
   saveConfigApi,
   gradleTaskApi,
   shellProjectApi,
+  buildAndDeployApi,
 } from "../apis/project";
-import {
-  Search,
-  Edit,
-  Check,
-  Message,
-  Star,
-  Delete,
-} from "@element-plus/icons";
+import { Delete } from "@element-plus/icons";
 export default {
   components: {
     Delete,
@@ -223,41 +217,38 @@ export default {
         projectName: state.projects[state.selectProjectIndex].projectName,
         taskName: i,
       }).then((res) => {
-        ElNotification({
-          title: "调用成功",
-          message: "请打开左边输出窗口查看日志",
-          position: "bottom-right",
-          duration: 1500,
-        });
+        showToast();
       });
     };
 
     const taskBuildEvent = (i) => {
       buildProjectApi({ projectName: i.projectName }).then((res) => {
-        ElNotification({
-          title: "调用成功",
-          message: "请打开左边输出窗口查看日志",
-          position: "bottom-right",
-          duration: 1500,
-        });
+        showToast();
       });
     };
     const taskExecShellEvent = (i) => {
-      shellProjectApi({ projectName: i.projectName }).then((res) => {
-        ElNotification({
-          title: "调用成功",
-          message: "请打开左边输出窗口查看日志",
-          position: "bottom-right",
-          duration: 1500,
-        });
-      });
+      shellProjectApi({ projectName: i.projectName }).then((res) => {});
     };
     const showProjectShell = (i) => {
       state.projectShell = i.shell;
       state.shellDialogVisible = !state.shellDialogVisible;
     };
+    const showToast = () => {
+      ElNotification({
+        title: "调用成功",
+        message: "请打开左边输出窗口查看日志",
+        position: "top-right",
+        duration: 1500,
+      });
+    };
+    const buildAndDeploy = (i, item) => {
+      buildAndDeployApi({ projectName: item.projectName }).then(() => {
+        showToast();
+      });
+    };
     return {
       ...toRefs(state),
+      buildAndDeploy,
       handlerConfig,
       taskBuildEvent,
       taskExecShellEvent,
