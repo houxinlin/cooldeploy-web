@@ -18,6 +18,10 @@ const constantRoutes = [
       }
     ]
   },
+  {
+  path: "/login",
+  name: "login",
+  component:()=>import("../views/login.vue")}
 ];
 
 const router = createRouter({
