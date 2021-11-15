@@ -1,20 +1,21 @@
 import axios from "axios";
-// import router from "../router/index";
+import router from "../router/index";
 const instance = axios.create({
-  baseURL: "http://localhost:5991/",
+  baseURL: import.meta.env.VITE_APP_REQUEST_URL,
   withCredentials: true,
 });
 
 instance.interceptors.response.use(
   function (response) {
     if (response.data.code == 302) {
-      window.location="/login"
+      router.push({
+        path: "/login",
+      });
     }
     return response;
   },
   function (error) {
-    console.log(error);
-    return Promise.reject(error);
+    return error;
   }
 );
 // instance.interceptors.response.use(

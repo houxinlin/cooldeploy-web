@@ -51,3 +51,18 @@ export function buildAndDeployApi(params) {
     params,
   });
 }
+export function pullProjectApi(params) {
+  return axios({
+    url: "/api/project/pullProject",
+    method: "get",
+    params,
+  });
+}
+
+export function cloneProjectApi(data) {
+  return axios({
+    url: "/api/project/cloneProject",
+    method: "post",
+    data,
+  });
+}

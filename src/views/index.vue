@@ -18,8 +18,8 @@
     </el-container>
   </el-container>
   <div class="socket-btn" @click="drawer=!drawer">
-    <svg t="1636682058564" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2434" width="48" height="48">
-      <path d="M263.10883555 897.96941748c0 45.9613677 60.71424948 72.06411378 94.18372742 38.58492682l385.83470458-385.82985008c22.1305363-22.12932267 22.1305363-55.03931733 0-77.16985363L357.29256297 87.73449955c-34.32751408-34.33722311-94.18372741-5.67007763-94.18372742 39.15411912v771.08079881z m0 0" p-id="2435" fill="#1296db"></path>
+    <svg t="1636949655303" class="icon" viewBox="0 0 1171 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="5768" width="32" height="32">
+      <path d="M566.312485 618.082487 198.037943 986.357029 146.289371 934.645029 568.945371 511.989029 620.657371 563.7376 618.134199 566.260773 1005.202286 953.362286 953.380571 1005.184 566.312485 618.082487 566.312485 618.082487ZM566.292846 106.080329 51.712 620.628114 0 568.952686 568.941714 0.010971 620.653714 51.722971 618.116242 54.260297 1151.488 587.666286 1099.666286 639.488 566.292846 106.080329 566.292846 106.080329Z" p-id="5769" fill="#2c2c2c"></path>
     </svg>
   </div>
   <el-drawer custom-class="drawer" v-model="drawer" title="I am the title" :with-header="false" direction="btt" size="50%">
@@ -57,32 +57,57 @@ export default {
   },
   methods: {
     connect() {
-      this.socket = new WebSocket("ws://localhost:5991/wbs");
+      this.socket = new WebSocket(import.meta.env.VITE_APP_WEBSOCKET);
       this.socket.onopen = this.open;
       this.socket.onerror = this.error;
       this.socket.onmessage = this.getMessage;
     },
-    open: function () {},
-    error: function () {},
+    open: function () {
+      ElNotification({
+        title: "WebScoket连接成功",
+        position: "bottom-right",
+        duration: 1500,
+      });
+    },
+    error: function () {
+      ElNotification({
+        title: "WebSocket断开连接",
+        message: "正在重新连接",
+        position: "bottom-right",
+        duration: 1500,
+      });
+      setTimeout(() => {
+        this.connect();
+      }, 2000);
+    },
     getMessage: function (msg) {
-      this.scrollbar.setScrollTop(100000);
       if (this.timetCount >= 10) {
         ElNotification({
           title: "有新的消息",
           message: "受到新消息推送",
-          position: "bottom-left",
+          position: "bottom-right",
           duration: 1500,
         });
       }
       this.timetCount = 0;
-      document.querySelector(".el-scrollbar__view").scrollTop = 100000;
       this.messageLine = this.messageLine + msg.data;
+      setTimeout(() => {
+        this.scrollbar.setScrollTop(99999999);
+      }, 10);
     },
     send: function () {
       this.socket.send(params);
     },
     close: function () {
-      console.log("socket已经关闭");
+      ElNotification({
+        title: "WebSocket断开连接",
+        message: "正在重新连接",
+        position: "bottom-right",
+        duration: 1500,
+      });
+      setTimeout(() => {
+        this.connect();
+      }, 2000);
     },
   },
 };
@@ -106,7 +131,7 @@ export default {
 
 .socket-btn {
   position: fixed;
-  left: -23px;
-  bottom: 6px;
+  left: -2px;
+  bottom: 0px;
 }
 </style>

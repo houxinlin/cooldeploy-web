@@ -1,10 +1,9 @@
 <template>
   <div>
-
     <el-button type="primary" @click="dialogFormVisible = true">增加</el-button>
-    <el-table :data="projects" style="width: 100%">
+    <el-button type="primary" @click="listProject">刷新</el-button>
+    <el-table v-loading="dataLoading" :data="projects" style="width: 100%">
       <el-table-column prop="firstCommitId" label="当前commit ID" width="180">
-
       </el-table-column>
       <el-table-column prop="projectName" label="项目名称" width="180">
       </el-table-column>
@@ -17,6 +16,8 @@
       </el-table-column>
       <el-table-column label="操作">
         <template #default="scope">
+          <el-button size="mini" type="success" @click="pullProject(scope.$index, scope.row)">刷新</el-button>
+
           <el-button size="mini" @click="handlerConfig(scope.$index, scope.row)">配置</el-button>
           <el-popconfirm confirm-button-text="执行shell" cancel-button-text="构建" :icon="InfoFilled" icon-color="red" title="你想要执行什么操作？" @confirm="taskExecShellEvent(scope.row)" @cancel="taskBuildEvent(scope.row)">
             <template #reference>
@@ -42,7 +43,7 @@
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="dialogFormVisible = false">取消</el-button>
-          <el-button type="primary" @click="dialogFormVisible = false">加载</el-button>
+          <el-button type="primary" @click="cloneProject">加载</el-button>
         </span>
       </template>
     </el-dialog>
@@ -109,7 +110,7 @@
 </template>
 
 <script>
-import { ElLoading } from "element-plus";
+import { ElLoading, ElMenuItemGroup } from "element-plus";
 import { ElNotification } from "element-plus";
 import { toRefs, reactive } from "vue";
 import {
@@ -120,6 +121,8 @@ import {
   gradleTaskApi,
   shellProjectApi,
   buildAndDeployApi,
+  pullProjectApi,
+  cloneProjectApi,
 } from "../apis/project";
 import { Delete } from "@element-plus/icons";
 export default {
@@ -133,6 +136,7 @@ export default {
     const state = reactive({
       dialogConfigVisible: false,
       gitSshUrl: "",
+      dataLoading: true,
       iconSize: 17,
       dialogFormVisible: false,
       commands: [],
@@ -153,9 +157,10 @@ export default {
       state.commands.splice(index, 1);
     };
     const listProject = () => {
+      state.dataLoading = true;
       listProjectApi().then((res) => {
         state.projects = res.data.data;
-        console.log(state.projects);
+        state.dataLoading = false;
       });
     };
     const handlerSaveConfig = () => {
@@ -181,9 +186,11 @@ export default {
       state.dialogConfigVisible = !state.dialogConfigVisible;
       state.shellTxt = item.shell;
       state.commands = item.buildCommands;
-      listTasksApi({ name: item.projectName }).then((res) => {
-        state.commandAuto = res.data.data;
-      });
+      listTasksApi({ name: item.projectName })
+        .then((res) => {
+          state.commandAuto = res.data.data;
+        })
+        .catch((e) => {});
     };
     const querySearch = (queryString, cb) => {
       const newValue = state.commandAuto.filter((i) => {
@@ -204,12 +211,17 @@ export default {
         background: "rgba(0, 0, 0, 0.7)",
       });
 
-      listTasksApi({ name: item.projectName }).then((res) => {
-        state.selectProjectIndex = i;
-        state.commandAuto = res.data.data;
-        state.dialogTaskVisible = !state.dialogTaskVisible;
-        state.loading.close();
-      });
+      listTasksApi({ name: item.projectName })
+        .then((res) => {
+          state.selectProjectIndex = i;
+          state.commandAuto = res.data.data;
+          state.dialogTaskVisible = !state.dialogTaskVisible;
+          state.loading.close();
+        })
+        .catch((e) => {
+          notifyLog("提示","发生错误")
+          state.loading.close();
+        });
     };
 
     const execProjectTask = (i) => {
@@ -227,18 +239,32 @@ export default {
       });
     };
     const taskExecShellEvent = (i) => {
-      shellProjectApi({ projectName: i.projectName }).then((res) => {});
+      shellProjectApi({ projectName: i.projectName }).then((res) => {
+        showToast();
+      });
     };
     const showProjectShell = (i) => {
       state.projectShell = i.shell;
       state.shellDialogVisible = !state.shellDialogVisible;
     };
     const showToast = () => {
+      notifyLog();
+      state.dialogFormVisible = false;
+    };
+    const notifyLog = (
+      title = "调用成功",
+      msg = "请打开左边输出窗口查看日志"
+    ) => {
       ElNotification({
-        title: "调用成功",
-        message: "请打开左边输出窗口查看日志",
+        title: title,
+        message: msg,
         position: "top-right",
         duration: 1500,
+      });
+    };
+    const cloneProject = () => {
+      cloneProjectApi({ address: state.gitSshUrl }).then((res) => {
+        showToast();
       });
     };
     const buildAndDeploy = (i, item) => {
@@ -246,8 +272,14 @@ export default {
         showToast();
       });
     };
+    const pullProject = (i, item) => {
+      pullProjectApi({ projectName: item.projectName }).then((res) => {
+        showToast();
+      });
+    };
     return {
       ...toRefs(state),
+      pullProject,
       buildAndDeploy,
       handlerConfig,
       taskBuildEvent,
@@ -255,6 +287,7 @@ export default {
       execProjectTask,
       showProjectShell,
       exectureTask,
+      cloneProject,
       listProject,
       autocompleteFocus,
       querySearch,
