@@ -161,6 +161,7 @@ export default {
       listProjectApi().then((res) => {
         state.projects = res.data.data;
         state.dataLoading = false;
+        notifyLog("提示","获取项目成功")
       });
     };
     const handlerSaveConfig = () => {
