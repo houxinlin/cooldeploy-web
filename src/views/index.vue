@@ -20,7 +20,7 @@
     </el-container>
   </el-container>
   <div class="socket-btn" @click="drawer=!drawer">
-      <el-button class="sk-btn" size="mini" type="primary">查看日志</el-button>
+    <el-button class="sk-btn" size="mini" type="primary">查看日志</el-button>
   </div>
   <el-drawer custom-class="drawer" v-model="drawer" title="I am the title" :with-header="false" direction="btt" size="50%">
     <el-scrollbar ref="scrollbar">
@@ -35,6 +35,7 @@
 <script>
 import { defineComponent, onMounted, ref } from "vue";
 import { ElNotification } from "element-plus";
+import router from "../router/index";
 export default {
   setup(props, context) {
     const scrollbar = ref(null);
@@ -49,12 +50,18 @@ export default {
   },
 
   mounted() {
-
     this.drawer = false;
     setInterval(() => {
       this.timetCount++;
     }, 1000);
-    this.connect();
+
+    if (sessionStorage.getItem("login") == "true") {
+      this.connect();
+      return;
+    }
+    router.push({
+      path: "/login",
+    });
   },
   methods: {
     connect() {
@@ -84,8 +91,7 @@ export default {
     getMessage: function (msg) {
       if (this.timetCount >= 10) {
         ElNotification({
-          title: "有新的消息",
-          message: "受到新消息推送",
+          title: "收到新消息推送",
           position: "bottom-right",
           duration: 1500,
         });
@@ -131,23 +137,22 @@ export default {
 }
 
 .socket-btn {
-position: fixed;
-    left: 33px;
-    bottom: 11px;
+  position: fixed;
+  left: 33px;
+  bottom: 11px;
 }
-.el-menu{
-  
+.el-menu {
 }
-.header{
-      display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    color: #4a4a4a;
-    font-size: 17px;
-    font-weight: 900;
-    padding-left: 103px;
+.header {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  color: #4a4a4a;
+  font-size: 17px;
+  font-weight: 900;
+  padding-left: 103px;
 }
-.sk-btn{
-      width: 130px;
+.sk-btn {
+  width: 130px;
 }
 </style>

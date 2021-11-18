@@ -41,7 +41,6 @@ export default {
           message: msgType == "success" ? "登陆成功" : "密码错误",
           type: msgType,
         });
-
         sessionStorage.setItem("login", res.data.data);
         loginState.loading = false;
         if (msgType == "success") {

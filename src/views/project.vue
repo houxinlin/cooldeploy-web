@@ -51,7 +51,7 @@
     <el-dialog v-model="dialogConfigVisible" title="项目配置">
       <el-tabs type="card" @tab-click="handleClick">
         <el-tab-pane label="构建命令">
-          <el-alert title="[构建命令]用于执行构建工具所提供的命令,如'gradlew build',但您可以在这里省略'gradlew'，直接填写'build'" closable="false" type="error" />
+          <el-alert title="[构建命令]用于执行构建工具所提供的命令，如'gradlew build'，但您可以在这里省略'gradlew'，直接填入'build'(仅仅Maven、Gradle支持这种方式)" closable="false" type="error" />
 
           <el-button type="primary" @click="addCommand" size="mini">添加</el-button>
           <template v-for="(item,index) in commands" :key="index">
@@ -73,9 +73,11 @@
 
           </template>
         </el-tab-pane>
-        <el-tab-pane label="Shell脚本">
+        <el-tab-pane class="shell" label="Shell脚本">
           <el-alert title="[Shell脚本]用于项目编译、部署,在自动构建时,将会执行此shell,构建命令可以无，但是Shell脚本必须存在" closable="false" type="error" />
-          <el-input v-model="shellTxt" :autosize="{ minRows: 5, maxRows: 20 }" type="textarea" placeholder="Please input" />
+          <div class="shell">
+            <el-input v-model="shellTxt" :autosize="{ minRows: 5, maxRows: 20 }" type="textarea" placeholder="Please input" />
+          </div>
         </el-tab-pane>
       </el-tabs>
       <template #footer>
@@ -96,7 +98,7 @@
     </el-drawer>
 
     <el-dialog v-model="shellDialogVisible" title="shell" width="30%" center>
-      <pre style="white-space: pre-line;">
+      <pre class="shell-per" style="white-space: pre-line;">
         {{projectShell}}
       </pre>
       <template #footer>
@@ -161,7 +163,7 @@ export default {
       listProjectApi().then((res) => {
         state.projects = res.data.data;
         state.dataLoading = false;
-        notifyLog("提示","获取项目成功")
+        notifyLog("提示", "获取项目成功");
       });
     };
     const handlerSaveConfig = () => {
@@ -220,7 +222,7 @@ export default {
           state.loading.close();
         })
         .catch((e) => {
-          notifyLog("提示","发生错误")
+          notifyLog("提示", "发生错误");
           state.loading.close();
         });
     };
@@ -332,5 +334,20 @@ export default {
 .el-drawer__body {
   flex: none;
   height: 80%;
+}
+.shell textarea {
+  background: #000000;
+  color: #ffffff;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.shell-per {
+  white-space: pre-line;
+  background: #000000;
+  color: #ffffff;
+  padding: 10px;
+  font-size: 10px;
+  border-radius: 7px;
+  overflow: auto;
 }
 </style>
