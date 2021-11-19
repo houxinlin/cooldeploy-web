@@ -84,6 +84,7 @@ export default {
 
     const generatorRsa = () => {
       generatorApi().then((r) => {
+        getPub();
         ElMessage({
           message: r.data.data,
           type: "success",
